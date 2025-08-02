@@ -16,7 +16,7 @@ namespace BulletinBoardApi.Data
         /// <summary>
         /// Retrieves all categories from the database.
         /// </summary>
-        async Task<IEnumerable<Category>> ICategoryRepository.GetAllCategoriesAsync()
+        async Task<IEnumerable<Category>> ICategoryRepository.GetAllCategoriesAsync(CancellationToken ct)
         {
             try
             {
@@ -26,9 +26,9 @@ namespace BulletinBoardApi.Data
                 {
                     CommandType = CommandType.StoredProcedure
                 };
-                await connection.OpenAsync();
-                using var reader = await command.ExecuteReaderAsync();
-                while (await reader.ReadAsync())
+                await connection.OpenAsync(ct);
+                using var reader = await command.ExecuteReaderAsync(ct);
+                while (await reader.ReadAsync(ct))
                 {
                     categories.Add(new Category()
                     {

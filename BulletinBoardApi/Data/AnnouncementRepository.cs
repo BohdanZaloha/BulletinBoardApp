@@ -1,9 +1,8 @@
 ﻿using BulletinBoardApi.Models;
-using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.CodeAnalysis.Elfie.Diagnostics;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
-using System.Data.Common;
 
 namespace BulletinBoardApi.Data
 {
@@ -18,12 +17,10 @@ namespace BulletinBoardApi.Data
         /// <summary>
         /// Inserts a new announcement into the database.
         /// </summary>
-        public async Task CreateAnnouncementAsync(Announcement announcement)
+        public async Task CreateAnnouncementAsync(Announcement announcement, CancellationToken ct)
         {
             try
             {
-
-
                 using var connection = new SqlConnection(connectionString);
                 using var command = new SqlCommand("AddAnnouncement", connection) //dbo.
                 {
@@ -34,8 +31,8 @@ namespace BulletinBoardApi.Data
                 command.Parameters.AddWithValue("@Status", announcement.Status);
                 command.Parameters.AddWithValue("@CategoryId", announcement.CategoryId);
                 command.Parameters.AddWithValue("@SubCategoryId", announcement.SubCategoryId);
-                await connection.OpenAsync();
-                await command.ExecuteNonQueryAsync();
+                await connection.OpenAsync(ct);
+                await command.ExecuteNonQueryAsync(ct);
             }
             catch (SqlException ex)
             {
@@ -46,7 +43,7 @@ namespace BulletinBoardApi.Data
         /// <summary>
         /// Removes an existing announcement by its identifier.
         /// </summary>
-        public async Task DeleteAnnouncementAsync(int id)
+        public async Task DeleteAnnouncementAsync(int id, CancellationToken ct)
         {
             try
             {
@@ -56,8 +53,13 @@ namespace BulletinBoardApi.Data
                     CommandType = CommandType.StoredProcedure
                 };
                 command.Parameters.AddWithValue("@Id", id);
-                await connection.OpenAsync();
-                await command.ExecuteNonQueryAsync();
+                await connection.OpenAsync(ct);
+                var rows = await command.ExecuteNonQueryAsync(ct);
+                if (rows == 0)
+                {
+                    throw new EntityNotFoundException($"Announcement with ID {id} not found.");
+                }
+                   
             }
             catch (SqlException ex)
             {
@@ -68,7 +70,7 @@ namespace BulletinBoardApi.Data
         /// <summary>
         /// Retrieves a single announcement by its identifier.
         /// </summary>
-        public async Task<Announcement> GetAnnouncementByIdAsync(int id)
+        public async Task<Announcement?> GetAnnouncementByIdAsync(int id, CancellationToken ct)
         {
             try
             {
@@ -78,10 +80,10 @@ namespace BulletinBoardApi.Data
                     CommandType = CommandType.StoredProcedure
                 };
                 command.Parameters.AddWithValue("@Id", id);
-                await connection.OpenAsync();
-                using var reader = await command.ExecuteReaderAsync();
+                await connection.OpenAsync(ct);
+                using var reader = await command.ExecuteReaderAsync(ct);
                 Announcement announcement = new Announcement();
-                while (await reader.ReadAsync())
+                while (await reader.ReadAsync(ct))
                 {
                     announcement = new Announcement()
                     {
@@ -89,7 +91,7 @@ namespace BulletinBoardApi.Data
                         Title = reader["Title"].ToString()!,
                         Description = reader["Description"] as string,
                         CreatedDate = (DateTime)reader["CreatedDate"],
-                        Status = (bool)reader["Status"],
+                        Status = (bool)reader["Status"], 
                         CategoryId = (int)reader["CategoryId"],
                         SubCategoryId = (int)reader["SubCategoryId"],
                         CategoryName = reader["CategoryName"].ToString().Trim(),
@@ -107,7 +109,7 @@ namespace BulletinBoardApi.Data
         /// <summary>
         /// Retrieves all announcements from the database.
         /// </summary>
-        public async Task<IEnumerable<Announcement>> GetAnnouncementsAsync()
+        public async Task<IEnumerable<Announcement>> GetAnnouncementsAsync(CancellationToken ct)
         {
             try
             {
@@ -117,10 +119,10 @@ namespace BulletinBoardApi.Data
                 {
                     CommandType = CommandType.StoredProcedure
                 };
-                await connection.OpenAsync();
-                using var reader = await command.ExecuteReaderAsync();
+                await connection.OpenAsync(ct);
+                using var reader = await command.ExecuteReaderAsync(ct);
                 Announcement announcement = new Announcement();
-                while (await reader.ReadAsync())
+                while (await reader.ReadAsync(ct))
                 {
                     announcements.Add(new Announcement()
                     {
@@ -147,7 +149,7 @@ namespace BulletinBoardApi.Data
         /// <summary>
         /// Updates an existing announcement in the database.
         /// </summary>
-        public async Task UpdateAnnouncementAsync(Announcement announcement)
+        public async Task UpdateAnnouncementAsync(Announcement announcement, CancellationToken ct)
         {
             try
             {
@@ -162,8 +164,13 @@ namespace BulletinBoardApi.Data
                 command.Parameters.AddWithValue("@Status", announcement.Status);
                 command.Parameters.AddWithValue("@CategoryId", announcement.CategoryId);
                 command.Parameters.AddWithValue("@SubCategoryId", announcement.SubCategoryId);
-                await connection.OpenAsync();
-                await command.ExecuteNonQueryAsync();
+                await connection.OpenAsync(ct);
+                var rows = await command.ExecuteNonQueryAsync(ct);
+                if (rows == 0)
+                {
+                    throw new EntityNotFoundException($"Announcement with ID {announcement.Id} not found.");
+                }
+                   
             }
             catch (SqlException ex)
             {

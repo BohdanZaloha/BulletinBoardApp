@@ -4,7 +4,7 @@ namespace BulletinBoardApi.Data
 {
     public interface ISubCategoryRepository
     {
-        Task<IEnumerable<SubCategory>> GetAllSubCategoriesAsync();
-        Task<IEnumerable<SubCategory>> GetSubCategoriesByCategoryIdAsync(int categoryId);
+        Task<IEnumerable<SubCategory>> GetAllSubCategoriesAsync(CancellationToken ct);
+        Task<IEnumerable<SubCategory>> GetSubCategoriesByCategoryIdAsync(int categoryId, CancellationToken ct);
     }
 }

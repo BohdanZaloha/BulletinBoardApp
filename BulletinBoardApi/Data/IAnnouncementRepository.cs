@@ -4,11 +4,11 @@ namespace BulletinBoardApi.Data
 {
     public interface IAnnouncementRepository
     {
-        public Task<IEnumerable<Announcement>> GetAnnouncementsAsync();
-        public Task<Announcement?> GetAnnouncementByIdAsync(int id);
-        public Task CreateAnnouncementAsync(Announcement announcement);
-        public Task UpdateAnnouncementAsync(Announcement announcement);
-        public Task DeleteAnnouncementAsync(int id);  
+        public Task<IEnumerable<Announcement>> GetAnnouncementsAsync(CancellationToken ct);
+        public Task<Announcement?> GetAnnouncementByIdAsync(int id, CancellationToken ct);
+        public Task CreateAnnouncementAsync(Announcement announcement, CancellationToken ct);
+        public Task UpdateAnnouncementAsync(Announcement announcement, CancellationToken ct);
+        public Task DeleteAnnouncementAsync(int id, CancellationToken ct);  
 
     }
 }

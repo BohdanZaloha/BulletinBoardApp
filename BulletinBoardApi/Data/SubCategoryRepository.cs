@@ -15,7 +15,7 @@ namespace BulletinBoardApi.Data
         /// <summary>
         /// Retrieves all SubCategories from the database.
         /// </summary>
-        async Task<IEnumerable<SubCategory>> ISubCategoryRepository.GetAllSubCategoriesAsync()
+        async Task<IEnumerable<SubCategory>> ISubCategoryRepository.GetAllSubCategoriesAsync(CancellationToken ct)
         {
             try
             {
@@ -25,10 +25,10 @@ namespace BulletinBoardApi.Data
                 {
                     CommandType = CommandType.StoredProcedure
                 };
-                await connection.OpenAsync();
-                using var reader = await command.ExecuteReaderAsync();
+                await connection.OpenAsync(ct);
+                using var reader = await command.ExecuteReaderAsync(ct);
 
-                while (await reader.ReadAsync())
+                while (await reader.ReadAsync(ct))
                 {
                     subCategories.Add(new SubCategory()
                     {
@@ -49,7 +49,7 @@ namespace BulletinBoardApi.Data
         /// <summary>
         /// Retrieves SubCategory By Id from the database.
         /// </summary>
-        async Task<IEnumerable<SubCategory>> ISubCategoryRepository.GetSubCategoriesByCategoryIdAsync(int categoryId)
+        async Task<IEnumerable<SubCategory>> ISubCategoryRepository.GetSubCategoriesByCategoryIdAsync(int categoryId, CancellationToken ct)
         {
             try
             {
@@ -60,10 +60,10 @@ namespace BulletinBoardApi.Data
                     CommandType = CommandType.StoredProcedure
                 };
                 command.Parameters.AddWithValue("@CategoryId", categoryId);
-                await connection.OpenAsync();
-                using var reader = await command.ExecuteReaderAsync();
+                await connection.OpenAsync(ct);
+                using var reader = await command.ExecuteReaderAsync(ct);
 
-                while (await reader.ReadAsync())
+                while (await reader.ReadAsync(ct))
                 {
                     subCategories.Add(new SubCategory()
                     {

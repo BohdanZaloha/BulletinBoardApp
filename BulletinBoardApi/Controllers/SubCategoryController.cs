@@ -15,9 +15,9 @@ namespace BulletinBoardApi.Controllers
         /// Retrieves all SubCategories.
         /// </summary>
         [HttpGet("GetSubCategories")]
-        public async Task<IActionResult> GetAllSubCategories()
+        public async Task<IActionResult> GetAllSubCategories(CancellationToken ct)
         {
-            var subCategories = await repository.GetAllSubCategoriesAsync();
+            var subCategories = await repository.GetAllSubCategoriesAsync(ct);
             return Ok(subCategories);
         }
 
@@ -25,10 +25,9 @@ namespace BulletinBoardApi.Controllers
         /// Retrieves SubCategory by Id.
         /// </summary>
         [HttpGet("GetSubCategoriesByCategoryId/{id:int}")]
-        public async Task<IActionResult> GetByCategory(int id)
+        public async Task<IActionResult> GetByCategory(int id, CancellationToken ct)
         {
-            // Якщо потрібно, ви можете перевірити спершу, чи існує така категорія.
-            var subCategories = await repository.GetSubCategoriesByCategoryIdAsync(id);
+            var subCategories = await repository.GetSubCategoriesByCategoryIdAsync(id, ct);
             return Ok(subCategories);
         }
     }

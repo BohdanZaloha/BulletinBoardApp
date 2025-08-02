@@ -4,6 +4,6 @@ namespace BulletinBoardApi.Data
 {
     public interface ICategoryRepository
     {
-        Task<IEnumerable<Category>> GetAllCategoriesAsync();
+        Task<IEnumerable<Category>> GetAllCategoriesAsync(CancellationToken ct);
     }
 }
