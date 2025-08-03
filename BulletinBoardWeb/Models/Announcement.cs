@@ -17,9 +17,11 @@ namespace BulletinBoardWeb.Models
         [Required]
         public bool Status { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Please select a category.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Please select a category.")]
         public int CategoryId { get; set; }
-        [Required]
+        [Required(ErrorMessage = "Please select a sub‐category.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Please select a sub‐category.")]
         public int SubCategoryId { get; set; }
 
         public string? CategoryName { get; set; }

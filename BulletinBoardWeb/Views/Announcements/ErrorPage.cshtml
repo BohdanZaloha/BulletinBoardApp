@@ -1,5 +1,7 @@
-﻿<br />
+﻿@Html.ValidationSummary(true, "", new { @class = "text-danger" })
+<br />
 
 <div class="container text-center">
-    <h2 class="text-danger">Unexpected Error</h2>
+    <h2>Error</h2>
+    <p class="text-danger">@ViewBag.ErrorMessage</p>
 </div>

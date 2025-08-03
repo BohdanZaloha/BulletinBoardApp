@@ -14,9 +14,9 @@ namespace BulletinBoardWeb.Controllers
     /// </summary>
     public class AnnouncementsController : Controller
     {
-        private readonly AnnouncementsService _announcementsService;
+        private readonly IAnnouncementsService _announcementsService;
 
-        public AnnouncementsController(AnnouncementsService announcementsService)
+        public AnnouncementsController(IAnnouncementsService announcementsService)
         {
             _announcementsService = announcementsService;
         }
@@ -28,17 +28,7 @@ namespace BulletinBoardWeb.Controllers
         private async Task LoadCategoryData(int? categoryId = null, int? subCategoryId = null)
         {
             var allCategories = await _announcementsService.GetCategoriesAsync();
-            List<SubCategory> allSubCategories;
-            if (categoryId.HasValue && categoryId.Value > 0)
-            {
-                allSubCategories = await _announcementsService
-                    .GetSubCategoriesByCategoryAsync(categoryId.Value);
-            }
-            else
-            {
-                allSubCategories = new List<SubCategory>();
-                // allSubCategories = await _announcementsService.GetAllSubCategoriesAsync();
-            }
+            var allSubCategories = categoryId.HasValue && categoryId.Value > 0 ? await _announcementsService.GetSubCategoriesByCategoryAsync(categoryId.Value) : new List<SubCategory>(); //_announcementsService.GetAllSubCategoriesAsync();
 
             ViewBag.CategoryList = new SelectList(allCategories, "CategoryId", "Name", categoryId ?? 0);
             ViewBag.SubCategoryList = new SelectList(allSubCategories, "SubCategoryId", "Name", subCategoryId ?? 0);
@@ -49,26 +39,27 @@ namespace BulletinBoardWeb.Controllers
         /// </summary>
         public async Task<IActionResult> Index(int? categoryId, int? subCategoryId)
         {
-            List<Announcement> announcements = await _announcementsService.GetAnnouncementsAsync();
-           
-
-            if (categoryId.HasValue && categoryId.Value > 0)
+            try
             {
-                announcements = announcements
-                    .Where(a => a.CategoryId == categoryId.Value)
-                    .ToList();
-            }
+                List<Announcement> announcements = await _announcementsService.GetAnnouncementsAsync();
+                if (categoryId > 0)
+                {
+                    announcements = announcements.Where(a => a.CategoryId == categoryId.Value).ToList();
+                }
+                if (subCategoryId > 0)
+                {
+                    announcements = announcements.Where(a => a.SubCategoryId == subCategoryId.Value).ToList();
+                }
 
-            if (subCategoryId.HasValue && subCategoryId.Value > 0)
+                await LoadCategoryData(categoryId, subCategoryId);
+
+                return View(announcements);
+            }
+            catch (ServiceException ex)
             {
-                announcements = announcements
-                    .Where(a => a.SubCategoryId == subCategoryId.Value)
-                    .ToList();
+                TempData["ErrorMessage"] = ex.Message;
+                return RedirectToAction(nameof(ErrorPage));
             }
-
-            await LoadCategoryData(categoryId, subCategoryId);
-
-            return View(announcements);
         }
 
         /// <summary>
@@ -77,20 +68,12 @@ namespace BulletinBoardWeb.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(int? categoryId)
         {
-            if (!ModelState.IsValid)
-            {
-                await LoadCategoryData(categoryId);
-                return BadRequest(ModelState);
-            }
-
             await LoadCategoryData(categoryId);
-
             var model = new Announcement
             {
                 CategoryId = categoryId.GetValueOrDefault(),
                 SubCategoryId = 0
             };
-
             return View(model);
         }
 
@@ -107,43 +90,77 @@ namespace BulletinBoardWeb.Controllers
                 return View(nameof(Create), announcement);
             }
 
-            await _announcementsService.CreateAnnouncementAsync(announcement);
-
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                await _announcementsService.CreateAnnouncementAsync(announcement);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (ServiceException ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+                await LoadCategoryData(announcement.CategoryId, announcement.SubCategoryId);
+                return View(nameof(Create), announcement);
+            }
         }
-        
 
         /// <summary>
         /// Displays the details of a specific announcement.
         /// </summary>
-        public async Task<IActionResult> Details(int Id)
+        [HttpGet]
+        public async Task<IActionResult> Edit(int Id, int? categoryId, int? subCategoryId)
         {
-            Announcement announcementDetails = await _announcementsService.GetAnnouncementsByIdAsync(Id);
+            try
+            {
+                Announcement announcementDetails = await _announcementsService.GetAnnouncementsByIdAsync(Id);
+                if (categoryId.HasValue)
+                {
+                    announcementDetails.CategoryId = categoryId.Value;
+                }
 
-            return View(announcementDetails);
+                if (subCategoryId.HasValue)
+                {
+                    announcementDetails.SubCategoryId = subCategoryId.Value;
+                }
+
+                await LoadCategoryData(announcementDetails.CategoryId,announcementDetails.SubCategoryId);
+
+                return View(announcementDetails);
+
+            }
+            catch (ServiceException ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+                return RedirectToAction(nameof(ErrorPage));
+            }
         }
 
         /// <summary>
         /// Updates an existing announcement via the API.
         /// </summary>
-        public async Task<IActionResult> UpdateAnnouncementDetails(int Id, Announcement announcement)
+        [HttpPost]
+        public async Task<IActionResult> Edit(int id, Announcement announcement)
         {
+            if (id != announcement.Id)
+            {
+                return BadRequest();
+            }
             if (!ModelState.IsValid)
             {
+                await LoadCategoryData(announcement.CategoryId, announcement.SubCategoryId);
                 return View(announcement);
             }
-                
 
-            var response = await _announcementsService.UpdateAnnouncementAsync(Id, announcement);
-                if (response.IsSuccessStatusCode)
-                {
-                    return RedirectToAction(nameof(Index));
-                }
-                else
-                {
-                    return View("ErrorPage");
-                }
-            
+            try
+            {
+                await _announcementsService.UpdateAnnouncementAsync(id, announcement);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (ServiceException ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+                await LoadCategoryData(announcement.CategoryId, announcement.SubCategoryId);
+                return View(announcement);
+            }
         }
 
         /// <summary>
@@ -151,35 +168,45 @@ namespace BulletinBoardWeb.Controllers
         /// </summary>
         public async Task<IActionResult> Delete(int Id)
         {
-            Announcement announcementDetails = await _announcementsService.GetAnnouncementsByIdAsync(Id);
+            try
+            {
+                Announcement announcementDetails = await _announcementsService.GetAnnouncementsByIdAsync(Id);
+                await LoadCategoryData(announcementDetails.CategoryId, announcementDetails.SubCategoryId);
+                return View(announcementDetails);
+            }
+            catch (ServiceException ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+                return RedirectToAction(nameof(ErrorPage));
+            }
 
-            await LoadCategoryData(announcementDetails.CategoryId, announcementDetails.SubCategoryId);
-            return View(announcementDetails);
         }
 
         /// <summary>
         /// Deletes an announcement via the API.
         /// </summary>
-        public async Task<IActionResult> DeleteAnnouncement(int Id)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAnnouncement(int id)
         {
-            if (!ModelState.IsValid)
-            {
-                return RedirectToAction(nameof(Delete), new { Id });
-            }
 
-            var response = await _announcementsService.DeleteAnnouncementAsync(Id);
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                return RedirectToAction("Index");
+                await _announcementsService.DeleteAnnouncementAsync(id);
+                return RedirectToAction(nameof(Index));
             }
-            else
+            catch (ServiceException ex)
             {
-                return View("ErrorPage");
+                ModelState.AddModelError(string.Empty, ex.Message);
+
+                var item = await _announcementsService.GetAnnouncementsByIdAsync(id);
+                await LoadCategoryData(item.CategoryId, item.SubCategoryId);
+                return View(nameof(Delete), item);
             }
         }
         public IActionResult ErrorPage()
         {
+            ViewBag.ErrorMessage = TempData["ErrorMessage"] ?? "An unexpected error occurred.";
             return View();
         }
     }

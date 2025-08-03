@@ -13,7 +13,7 @@ namespace BulletinBoardWeb
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
-            builder.Services.AddHttpClient<AnnouncementsService>(client =>
+            builder.Services.AddHttpClient<IAnnouncementsService, AnnouncementsService>(client =>
             {
                 client.BaseAddress = new Uri(builder.Configuration["Api:BaseUrl"]);
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
