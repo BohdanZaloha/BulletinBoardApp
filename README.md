@@ -95,7 +95,7 @@ BulletinBoardApp/               # Solution root
 
 ---
 
-## 🛠️ API Endpoints
+##  API Endpoints
 
 | Method | Route                        | Description                       |
 | ------ | ---------------------------- | --------------------------------- |
