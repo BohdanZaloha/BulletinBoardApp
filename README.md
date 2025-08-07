@@ -45,7 +45,7 @@ BulletinBoardApp/               # Solution root
 1. **Clone the repo**
 
    ```bash
-   git clone https://github.com/yourusername/bulletin-board-app.git
+   git clone https://github.com/BohdanZaloha/bulletin-board-app.git
    cd bulletin-board-app
    ```
 
