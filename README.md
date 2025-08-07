@@ -57,7 +57,7 @@ BulletinBoardApp/               # Solution root
 
 3. **Configure connection strings**
 
-   - In both projects, edit `appsettings.json`:
+   - In the API project, edit `appsettings.json`:
      ```json
      "ConnectionStrings": {
        "DefaultConnection": "Server=.;Database=BulletinBoard;Trusted_Connection=True;"
