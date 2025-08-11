@@ -138,6 +138,7 @@ namespace BulletinBoardWeb.Controllers
         /// Updates an existing announcement via the API.
         /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Announcement announcement)
         {
             if (id != announcement.Id)

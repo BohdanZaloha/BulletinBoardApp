@@ -35,7 +35,7 @@ namespace BulletinBoardApi.Controllers
         /// <summary>
         /// Retrieves a specific announcement by its identifier.
         /// </summary>
-        [HttpGet("GetAnnouncementById/{id:int}")]
+        [HttpGet("{id:int}")]
         public async Task<ActionResult<Announcement>> GetById(int id, CancellationToken ct)
         {
             var announcement = await _repository.GetAnnouncementByIdAsync(id, ct);
@@ -50,7 +50,7 @@ namespace BulletinBoardApi.Controllers
         /// <summary>
         /// Updates an existing announcement.
         /// </summary>
-        [HttpPut("UpdateAnnouncement/{id:int}")]
+        [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody] Announcement announcement, CancellationToken ct)
         {
             if (id != announcement.Id)
@@ -64,7 +64,7 @@ namespace BulletinBoardApi.Controllers
         /// <summary>
         /// Deletes an announcement by its identifier.
         /// </summary>
-        [HttpDelete("DeleteAnnouncement/{id:int}")]
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id, CancellationToken ct)
         {
             var announcement = await _repository.GetAnnouncementByIdAsync(id, ct );

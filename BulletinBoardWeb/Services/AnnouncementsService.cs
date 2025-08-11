@@ -30,7 +30,7 @@ namespace BulletinBoardWeb.Services
 
         public async Task<HttpResponseMessage> UpdateAnnouncementAsync(int announcementId, Announcement announcement)
         {
-            var response = await _httpClient.PutAsJsonAsync($"api/Announcement/UpdateAnnouncement/{announcementId}", announcement);
+            var response = await _httpClient.PutAsJsonAsync($"api/Announcement/{announcementId}", announcement);
             if (!response.IsSuccessStatusCode)
             {
                 var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
@@ -40,7 +40,7 @@ namespace BulletinBoardWeb.Services
         }
         public async Task<HttpResponseMessage> DeleteAnnouncementAsync(int announcementId)
         {
-           var response = await _httpClient.DeleteAsync($"api/Announcement/DeleteAnnouncement/{announcementId}").ConfigureAwait(false);
+           var response = await _httpClient.DeleteAsync($"api/Announcement/{announcementId}").ConfigureAwait(false);
             if(!response.IsSuccessStatusCode)
             {
                 var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
@@ -51,7 +51,7 @@ namespace BulletinBoardWeb.Services
 
         public async Task<Announcement> GetAnnouncementsByIdAsync(int announcementId)
         {
-            var response = await _httpClient.GetAsync($"api/Announcement/GetAnnouncementById/{announcementId}");
+            var response = await _httpClient.GetAsync($"api/Announcement/{announcementId}");
 
             if (!response.IsSuccessStatusCode)
             {
