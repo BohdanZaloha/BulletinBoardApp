@@ -1,4 +1,3 @@
-using BulletinBoardWeb.Models;
 using BulletinBoardWeb.Services;
 using System.Net.Http.Headers;
 
@@ -17,7 +16,7 @@ namespace BulletinBoardWeb
             {
                 client.BaseAddress = new Uri(builder.Configuration["Api:BaseUrl"]);
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            });   
+            });
 
             var app = builder.Build();
 

@@ -2,9 +2,6 @@
 using BulletinBoardWeb.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Newtonsoft.Json;
-using System.Net.Http.Headers;
-using System.Reflection;
 
 namespace BulletinBoardWeb.Controllers
 {
@@ -122,7 +119,7 @@ namespace BulletinBoardWeb.Controllers
                     announcementDetails.SubCategoryId = subCategoryId.Value;
                 }
 
-                await LoadCategoryData(announcementDetails.CategoryId,announcementDetails.SubCategoryId);
+                await LoadCategoryData(announcementDetails.CategoryId, announcementDetails.SubCategoryId);
 
                 return View(announcementDetails);
 

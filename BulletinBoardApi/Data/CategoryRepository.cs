@@ -1,6 +1,5 @@
 ﻿using BulletinBoardApi.Models;
 using Microsoft.Data.SqlClient;
-using System.ComponentModel.DataAnnotations;
 using System.Data;
 
 namespace BulletinBoardApi.Data
@@ -9,10 +8,10 @@ namespace BulletinBoardApi.Data
     /// Repository implementation for managing <see cref="Category"/> entities
     /// via stored procedures in the SQL database.
     /// </summary>
-    public class CategoryRepository(IConfiguration config): ICategoryRepository
+    public class CategoryRepository(IConfiguration config) : ICategoryRepository
     {
         private readonly string connectionString = config.GetConnectionString("DefaultConnection");
-        
+
         /// <summary>
         /// Retrieves all categories from the database.
         /// </summary>
@@ -43,6 +42,6 @@ namespace BulletinBoardApi.Data
                 throw new StoredProcException(ex.Number, $"Error when getting categories (Code={ex.Number}): {ex.Message}", ex);
             }
         }
-    
+
     }
 }

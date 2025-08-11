@@ -1,6 +1,5 @@
 ﻿using BulletinBoardApi.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Net.Mime;
 
 namespace BulletinBoardApi.MiddleWare

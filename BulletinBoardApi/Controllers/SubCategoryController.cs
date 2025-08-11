@@ -1,5 +1,4 @@
 ﻿using BulletinBoardApi.Data;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BulletinBoardApi.Controllers

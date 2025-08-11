@@ -67,7 +67,7 @@ namespace BulletinBoardApi.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id, CancellationToken ct)
         {
-            var announcement = await _repository.GetAnnouncementByIdAsync(id, ct );
+            var announcement = await _repository.GetAnnouncementByIdAsync(id, ct);
             if (announcement == null)
             {
                 return NotFound($"Announcement with ID {id} not found.");

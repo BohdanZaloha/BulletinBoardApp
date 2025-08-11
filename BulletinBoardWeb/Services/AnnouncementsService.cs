@@ -40,8 +40,8 @@ namespace BulletinBoardWeb.Services
         }
         public async Task<HttpResponseMessage> DeleteAnnouncementAsync(int announcementId)
         {
-           var response = await _httpClient.DeleteAsync($"api/Announcement/{announcementId}").ConfigureAwait(false);
-            if(!response.IsSuccessStatusCode)
+            var response = await _httpClient.DeleteAsync($"api/Announcement/{announcementId}").ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
             {
                 var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
                 throw new ServiceException(problemDetails?.Detail ?? "Error when deleting announcement.", response.StatusCode);
@@ -56,13 +56,13 @@ namespace BulletinBoardWeb.Services
             if (!response.IsSuccessStatusCode)
             {
                 var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-                throw new ServiceException(problemDetails?.Detail ?? $"Error loading announcement {announcementId}.",response.StatusCode);
+                throw new ServiceException(problemDetails?.Detail ?? $"Error loading announcement {announcementId}.", response.StatusCode);
             }
 
             var announcement = await response.Content.ReadFromJsonAsync<Announcement>();
             if (announcement is null)
             {
-                throw new ServiceException($"Announcement {announcementId} was not found in the response.",HttpStatusCode.NoContent);
+                throw new ServiceException($"Announcement {announcementId} was not found in the response.", HttpStatusCode.NoContent);
             }
 
             return announcement;
@@ -75,7 +75,7 @@ namespace BulletinBoardWeb.Services
             if (!response.IsSuccessStatusCode)
             {
                 var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-                throw new ServiceException(problemDetails?.Detail ?? "Error loading categories.",response.StatusCode);
+                throw new ServiceException(problemDetails?.Detail ?? "Error loading categories.", response.StatusCode);
             }
 
             var list = await response.Content.ReadFromJsonAsync<List<Category>>();
@@ -90,7 +90,7 @@ namespace BulletinBoardWeb.Services
             if (!response.IsSuccessStatusCode)
             {
                 var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-                throw new ServiceException(problemDetails?.Detail ?? $"Error loading subcategories for category {categoryId}.",response.StatusCode);
+                throw new ServiceException(problemDetails?.Detail ?? $"Error loading subcategories for category {categoryId}.", response.StatusCode);
             }
 
             var list = await response.Content.ReadFromJsonAsync<List<SubCategory>>();
@@ -99,5 +99,5 @@ namespace BulletinBoardWeb.Services
 
 
     }
-    
+
 }

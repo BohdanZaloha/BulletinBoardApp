@@ -6,7 +6,7 @@ namespace BulletinBoardWeb.Services
     {
         Task<List<Category>> GetCategoriesAsync();
         Task<List<SubCategory>> GetSubCategoriesByCategoryAsync(int categoryId);
-        
+
         Task<List<Announcement>> GetAnnouncementsAsync();
 
 

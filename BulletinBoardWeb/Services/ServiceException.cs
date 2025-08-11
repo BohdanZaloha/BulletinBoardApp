@@ -8,7 +8,7 @@ namespace BulletinBoardWeb.Services
     public class ServiceException : Exception
     {
         public HttpStatusCode StatusCode { get; }
-        public ServiceException(string message, HttpStatusCode statusCode) :base(message)
+        public ServiceException(string message, HttpStatusCode statusCode) : base(message)
         {
             StatusCode = statusCode;
         }

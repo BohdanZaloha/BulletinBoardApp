@@ -1,5 +1,4 @@
 ﻿using BulletinBoardApi.Models;
-using Microsoft.CodeAnalysis.Elfie.Diagnostics;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
@@ -10,7 +9,7 @@ namespace BulletinBoardApi.Data
     /// Repository implementation for managing <see cref="Announcement"/> entities
     /// via stored procedures in the SQL database.
     /// </summary>
-    public class AnnouncementRepository(IConfiguration config): IAnnouncementRepository
+    public class AnnouncementRepository(IConfiguration config) : IAnnouncementRepository
     {
         private readonly string connectionString = config.GetConnectionString("DefaultConnection");
 
@@ -26,17 +25,18 @@ namespace BulletinBoardApi.Data
                 {
                     CommandType = CommandType.StoredProcedure
                 };
-                command.Parameters.AddWithValue("@Title", announcement.Title);
-                command.Parameters.AddWithValue("@Description", announcement.Description);
-                command.Parameters.AddWithValue("@Status", announcement.Status);
-                command.Parameters.AddWithValue("@CategoryId", announcement.CategoryId);
-                command.Parameters.AddWithValue("@SubCategoryId", announcement.SubCategoryId);
+                command.Parameters.Add(new SqlParameter("@Title", SqlDbType.NVarChar, 200) { Value = announcement.Title });
+                command.Parameters.Add(new SqlParameter("@Description", SqlDbType.NVarChar, -1) { Value = (object?)announcement.Description ?? DBNull.Value });
+                command.Parameters.Add(new SqlParameter("@Status", SqlDbType.Bit) { Value = announcement.Status });
+                command.Parameters.Add(new SqlParameter("@CategoryId", SqlDbType.Int) { Value = announcement.CategoryId });
+                command.Parameters.Add(new SqlParameter("@SubCategoryId", SqlDbType.Int) { Value = announcement.SubCategoryId });
                 await connection.OpenAsync(ct);
-                await command.ExecuteNonQueryAsync(ct);
+                var scalar = await command.ExecuteScalarAsync(ct);
+                announcement.Id = Convert.ToInt32(scalar);
             }
             catch (SqlException ex)
             {
-                throw new StoredProcException(ex.Number,$"Error when creating announcement (Code={ex.Number}): {ex.Message}", ex);
+                throw new StoredProcException(ex.Number, $"Error when creating announcement (Code={ex.Number}): {ex.Message}", ex);
             }
         }
 
@@ -52,14 +52,14 @@ namespace BulletinBoardApi.Data
                 {
                     CommandType = CommandType.StoredProcedure
                 };
-                command.Parameters.AddWithValue("@Id", id);
+                command.Parameters.Add(new SqlParameter("@Id", SqlDbType.Int) { Value = id });
                 await connection.OpenAsync(ct);
                 var rows = await command.ExecuteNonQueryAsync(ct);
                 if (rows == 0)
                 {
                     throw new EntityNotFoundException($"Announcement with ID {id} not found.");
                 }
-                   
+
             }
             catch (SqlException ex)
             {
@@ -79,26 +79,28 @@ namespace BulletinBoardApi.Data
                 {
                     CommandType = CommandType.StoredProcedure
                 };
-                command.Parameters.AddWithValue("@Id", id);
+                command.Parameters.Add(new SqlParameter("@Id", SqlDbType.Int) { Value = id });
                 await connection.OpenAsync(ct);
+
                 using var reader = await command.ExecuteReaderAsync(ct);
-                Announcement announcement = new Announcement();
-                while (await reader.ReadAsync(ct))
+                if (!await reader.ReadAsync(ct))
+                    return null;
+
+                Announcement announcement = new Announcement()
                 {
-                    announcement = new Announcement()
-                    {
-                        Id = (int)reader["Id"],
-                        Title = reader["Title"].ToString()!,
-                        Description = reader["Description"] as string,
-                        CreatedDate = (DateTime)reader["CreatedDate"],
-                        Status = (bool)reader["Status"], 
-                        CategoryId = (int)reader["CategoryId"],
-                        SubCategoryId = (int)reader["SubCategoryId"],
-                        CategoryName = reader["CategoryName"].ToString().Trim(),
-                        SubCategoryName = reader["SubCategoryName"].ToString().Trim()
-                    };
-                }
+                    Id = reader.GetInt32(reader.GetOrdinal(nameof(announcement.Id))),
+                    Title = reader.GetString(reader.GetOrdinal(nameof(announcement.Title))),
+                    Description = reader.GetString(reader.GetOrdinal(nameof(announcement.Description))),
+                    CreatedDate = reader.GetDateTime(reader.GetOrdinal(nameof(announcement.CreatedDate))),
+                    Status = reader.GetBoolean(reader.GetOrdinal(nameof(announcement.Status))),
+                    CategoryId = reader.GetInt32(reader.GetOrdinal(nameof(announcement.CategoryId))),
+                    SubCategoryId = reader.GetInt32(reader.GetOrdinal(nameof(announcement.SubCategoryId))),
+                    CategoryName = reader.GetString(reader.GetOrdinal(nameof(announcement.SubCategoryName))),
+                    SubCategoryName = reader.GetString(reader.GetOrdinal(nameof(announcement.SubCategoryName)))
+                };
+
                 return announcement;
+
             }
             catch (SqlException ex)
             {
@@ -126,15 +128,15 @@ namespace BulletinBoardApi.Data
                 {
                     announcements.Add(new Announcement()
                     {
-                        Id = (int)reader["Id"],
-                        Title = reader["Title"].ToString()!,
-                        Description = reader["Description"] as string,
-                        CreatedDate = (DateTime)reader["CreatedDate"],
-                        Status = (bool)reader["Status"],
-                        CategoryId = (int)reader["CategoryId"],
-                        SubCategoryId = (int)reader["SubCategoryId"],
-                        CategoryName = reader["CategoryName"].ToString().Trim(),
-                        SubCategoryName = reader["SubCategoryName"].ToString().Trim()
+                        Id = reader.GetInt32(reader.GetOrdinal(nameof(announcement.Id))),
+                        Title = reader.GetString(reader.GetOrdinal(nameof(announcement.Title))),
+                        Description = reader.GetString(reader.GetOrdinal(nameof(announcement.Description))),
+                        CreatedDate = reader.GetDateTime(reader.GetOrdinal(nameof(announcement.CreatedDate))),
+                        Status = reader.GetBoolean(reader.GetOrdinal(nameof(announcement.Status))),
+                        CategoryId = reader.GetInt32(reader.GetOrdinal(nameof(announcement.CategoryId))),
+                        SubCategoryId = reader.GetInt32(reader.GetOrdinal(nameof(announcement.SubCategoryId))),
+                        CategoryName = reader.GetString(reader.GetOrdinal(nameof(announcement.SubCategoryName))).Trim(),
+                        SubCategoryName = reader.GetString(reader.GetOrdinal(nameof(announcement.SubCategoryName))).Trim()
                     });
                 }
                 return announcements;
@@ -158,19 +160,19 @@ namespace BulletinBoardApi.Data
                 {
                     CommandType = CommandType.StoredProcedure
                 };
-                command.Parameters.AddWithValue("@Id", announcement.Id);
-                command.Parameters.AddWithValue("@Title", announcement.Title);
-                command.Parameters.AddWithValue("@Description", announcement.Description);
-                command.Parameters.AddWithValue("@Status", announcement.Status);
-                command.Parameters.AddWithValue("@CategoryId", announcement.CategoryId);
-                command.Parameters.AddWithValue("@SubCategoryId", announcement.SubCategoryId);
+                command.Parameters.Add(new SqlParameter("@Id", SqlDbType.Int) { Value = announcement.Id });
+                command.Parameters.Add(new SqlParameter("@Title", SqlDbType.NVarChar, 200) { Value = announcement.Title });
+                command.Parameters.Add(new SqlParameter("@Description", SqlDbType.NVarChar, -1) { Value = (object?)announcement.Description ?? DBNull.Value });
+                command.Parameters.Add(new SqlParameter("@Status", SqlDbType.Bit) { Value = announcement.Status });
+                command.Parameters.Add(new SqlParameter("@CategoryId", SqlDbType.Int) { Value = announcement.CategoryId });
+                command.Parameters.Add(new SqlParameter("@SubCategoryId", SqlDbType.Int) { Value = announcement.SubCategoryId });
                 await connection.OpenAsync(ct);
                 var rows = await command.ExecuteNonQueryAsync(ct);
                 if (rows == 0)
                 {
                     throw new EntityNotFoundException($"Announcement with ID {announcement.Id} not found.");
                 }
-                   
+
             }
             catch (SqlException ex)
             {
