@@ -14,7 +14,7 @@ namespace BulletinBoardApi.Controllers
         /// <summary>
         /// Retrieves all SubCategories.
         /// </summary>
-        [HttpGet("GetSubCategories")]
+        [HttpGet()]
         public async Task<IActionResult> GetAllSubCategories(CancellationToken ct)
         {
             var subCategories = await repository.GetAllSubCategoriesAsync(ct);
@@ -24,10 +24,10 @@ namespace BulletinBoardApi.Controllers
         /// <summary>
         /// Retrieves SubCategory by Id.
         /// </summary>
-        [HttpGet("GetSubCategoriesByCategoryId/{id:int}")]
-        public async Task<IActionResult> GetByCategory(int id, CancellationToken ct)
+        [HttpGet("{categoryId:int}")]
+        public async Task<IActionResult> GetByCategory(int categoryId, CancellationToken ct)
         {
-            var subCategories = await repository.GetSubCategoriesByCategoryIdAsync(id, ct);
+            var subCategories = await repository.GetSubCategoriesByCategoryIdAsync(categoryId, ct);
             return Ok(subCategories);
         }
     }

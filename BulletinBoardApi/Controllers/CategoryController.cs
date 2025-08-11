@@ -15,7 +15,7 @@ namespace BulletinBoardApi.Controllers
         /// <summary>
         /// Retrieves all categories.
         /// </summary>
-        [HttpGet("GetCategories")]
+        [HttpGet]
         public async Task<IActionResult> GetAll(CancellationToken ct)
         {
             var categories = await _repository.GetAllCategoriesAsync(ct);

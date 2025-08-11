@@ -70,7 +70,7 @@ namespace BulletinBoardWeb.Services
 
         public async Task<List<Category>> GetCategoriesAsync()
         {
-            var response = await _httpClient.GetAsync("api/Category/GetCategories");
+            var response = await _httpClient.GetAsync("api/Category/");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -85,7 +85,7 @@ namespace BulletinBoardWeb.Services
 
         public async Task<List<SubCategory>> GetSubCategoriesByCategoryAsync(int categoryId)
         {
-            var response = await _httpClient.GetAsync($"api/SubCategory/GetSubCategoriesByCategoryId/{categoryId}");
+            var response = await _httpClient.GetAsync($"api/SubCategory/{categoryId}");
 
             if (!response.IsSuccessStatusCode)
             {
