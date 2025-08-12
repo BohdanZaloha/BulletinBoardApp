@@ -1,30 +1,74 @@
-CREATE TABLE Categories (
-    CategoryId INT PRIMARY KEY,
-    Name NVARCHAR(200) NOT NULL
-);
+-- Bulletin Board DB - full setup script
+-- Creates database, tables, indexes and stored procedures
 
-CREATE TABLE SubCategories (
-    SubCategoryId INT PRIMARY KEY,
-    Name NVARCHAR(100) NOT NULL,
-    CategoryId INT NOT NULL,
-    FOREIGN KEY (CategoryId) REFERENCES Categories(CategoryId)
-);
+IF DB_ID(N'BulletinBoard_DB') IS NULL
+BEGIN
+    CREATE DATABASE [BulletinBoard_DB];
+END
+GO
 
-CREATE TABLE Announcements (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    Title NVARCHAR(200) NOT NULL,
-    Description NVARCHAR(MAX) NOT NULL,
-    CreatedDate DATETIME NOT NULL DEFAULT GETDATE(),
-    Status BIT NOT NULL,
-    CategoryId INT NOT NULL,
-    SubCategoryId INT NOT NULL,
-    FOREIGN KEY (CategoryId) REFERENCES Categories(CategoryId),
-    FOREIGN KEY (SubCategoryId) REFERENCES SubCategories(SubCategoryId)
-);
+USE [BulletinBoard_DB];
+GO
 
-STORED PROCEDURES
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+GO
 
-CREATE PROCEDURE dbo.AddAnnouncement
+-- Tables
+
+IF OBJECT_ID(N'dbo.Categories', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Categories (
+        CategoryId INT NOT NULL PRIMARY KEY,
+        Name NVARCHAR(200) NOT NULL
+    );
+    CREATE UNIQUE INDEX UX_Categories_Name ON dbo.Categories(Name);
+END
+GO
+
+IF OBJECT_ID(N'dbo.SubCategories', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.SubCategories (
+        SubCategoryId INT NOT NULL PRIMARY KEY,
+        Name NVARCHAR(100) NOT NULL,
+        CategoryId INT NOT NULL
+    );
+    ALTER TABLE dbo.SubCategories 
+      ADD CONSTRAINT FK_SubCategories_Categories
+      FOREIGN KEY (CategoryId) REFERENCES dbo.Categories(CategoryId);
+    CREATE UNIQUE INDEX UX_SubCategories_Category_Name ON dbo.SubCategories(CategoryId, Name);
+END
+GO
+
+IF OBJECT_ID(N'dbo.Announcements', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Announcements (
+        Id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Announcements PRIMARY KEY,
+        Title NVARCHAR(200) NOT NULL,
+        Description NVARCHAR(MAX) NOT NULL,
+        CreatedDate DATETIME NOT NULL CONSTRAINT DF_Announcements_CreatedDate DEFAULT (GETDATE()),
+        Status BIT NOT NULL,
+        CategoryId INT NOT NULL,
+        SubCategoryId INT NOT NULL
+    );
+
+    ALTER TABLE dbo.Announcements
+      ADD CONSTRAINT FK_Announcements_Categories
+      FOREIGN KEY (CategoryId) REFERENCES dbo.Categories(CategoryId);
+
+    ALTER TABLE dbo.Announcements
+      ADD CONSTRAINT FK_Announcements_SubCategories
+      FOREIGN KEY (SubCategoryId) REFERENCES dbo.SubCategories(SubCategoryId);
+
+    CREATE INDEX IX_Announcements_CreatedDate ON dbo.Announcements(CreatedDate);
+    CREATE INDEX IX_Announcements_Category_SubCategory ON dbo.Announcements(CategoryId, SubCategoryId);
+END
+GO
+
+-- Stored Procedures
+
+-- AddAnnouncement
+CREATE OR ALTER PROCEDURE dbo.AddAnnouncement
     @Title         NVARCHAR(200),
     @Description   NVARCHAR(MAX),
     @Status        BIT,
@@ -34,13 +78,25 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    INSERT INTO dbo.Announcements
-        (Title, Description, Status, CategoryId, SubCategoryId)
-    VALUES
-        (@Title, @Description, @Status, @CategoryId, @SubCategoryId);
-END;
+    IF NOT EXISTS (
+        SELECT 1
+        FROM dbo.SubCategories sc
+        WHERE sc.SubCategoryId = @SubCategoryId
+          AND sc.CategoryId    = @CategoryId
+    )
+    BEGIN
+        THROW 50001, 'SubCategoryId does not belong to CategoryId.', 1;
+    END;
 
-CREATE PROCEDURE dbo.DeleteAnnouncementById
+    INSERT INTO dbo.Announcements (Title, Description, Status, CategoryId, SubCategoryId)
+    VALUES (@Title, @Description, @Status, @CategoryId, @SubCategoryId);
+
+    SELECT CAST(SCOPE_IDENTITY() AS INT) AS Id;
+END
+GO
+
+-- DeleteAnnouncementById
+CREATE OR ALTER PROCEDURE dbo.DeleteAnnouncementById
     @Id INT
 AS
 BEGIN
@@ -48,9 +104,13 @@ BEGIN
 
     DELETE FROM dbo.Announcements
     WHERE Id = @Id;
-END;
 
-CREATE PROCEDURE dbo.GetAllAnnouncements
+    SELECT @@ROWCOUNT AS RowsAffected;
+END
+GO
+
+-- GetAllAnnouncements
+CREATE OR ALTER PROCEDURE dbo.GetAllAnnouncements
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -62,16 +122,18 @@ BEGIN
         a.CreatedDate,
         a.Status,
         a.CategoryId,
-        c.Name         AS CategoryName,
+        c.Name AS CategoryName,
         a.SubCategoryId,
-        sc.Name        AS SubCategoryName
+        sc.Name AS SubCategoryName
     FROM dbo.Announcements AS a
-    INNER JOIN dbo.Categories     AS c  ON a.CategoryId    = c.CategoryId
-    INNER JOIN dbo.SubCategories AS sc  ON a.SubCategoryId = sc.SubCategoryId
-    ORDER BY a.CreatedDate DESC;
-END;
+    JOIN dbo.Categories     AS c  ON c.CategoryId     = a.CategoryId
+    JOIN dbo.SubCategories  AS sc ON sc.SubCategoryId = a.SubCategoryId
+    ORDER BY a.CreatedDate DESC, a.Id DESC;
+END
+GO
 
-CREATE PROCEDURE dbo.GetAllCategories
+-- GetAllCategories
+CREATE OR ALTER PROCEDURE dbo.GetAllCategories
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -81,9 +143,11 @@ BEGIN
         Name
     FROM dbo.Categories
     ORDER BY Name;
-END;
+END
+GO
 
-CREATE PROCEDURE dbo.GetAllSubCategories
+-- GetAllSubCategories
+CREATE OR ALTER PROCEDURE dbo.GetAllSubCategories
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -94,9 +158,11 @@ BEGIN
         Name
     FROM dbo.SubCategories
     ORDER BY Name;
-END;
+END
+GO
 
-CREATE PROCEDURE dbo.GetAnnouncementById
+-- GetAnnouncementById
+CREATE OR ALTER PROCEDURE dbo.GetAnnouncementById
     @Id INT
 AS
 BEGIN
@@ -109,16 +175,18 @@ BEGIN
         a.CreatedDate,
         a.Status,
         a.CategoryId,
-        c.Name        AS CategoryName,
+        c.Name AS CategoryName,
         a.SubCategoryId,
-        sc.Name       AS SubCategoryName
+        sc.Name AS SubCategoryName
     FROM dbo.Announcements AS a
-    INNER JOIN dbo.Categories     AS c  ON a.CategoryId    = c.CategoryId
-    INNER JOIN dbo.SubCategories AS sc ON a.SubCategoryId = sc.SubCategoryId
+    JOIN dbo.Categories     AS c  ON a.CategoryId     = c.CategoryId
+    JOIN dbo.SubCategories  AS sc ON a.SubCategoryId  = sc.SubCategoryId
     WHERE a.Id = @Id;
-END;
+END
+GO
 
-CREATE PROCEDURE dbo.GetSubCategoriesByCategoryId
+-- GetSubCategoriesByCategoryId
+CREATE OR ALTER PROCEDURE dbo.GetSubCategoriesByCategoryId
     @CategoryId INT
 AS
 BEGIN
@@ -131,9 +199,11 @@ BEGIN
     FROM dbo.SubCategories
     WHERE CategoryId = @CategoryId
     ORDER BY Name;
-END;
+END
+GO
 
-CREATE PROCEDURE dbo.UpdateAnnouncement
+-- UpdateAnnouncement
+CREATE OR ALTER PROCEDURE dbo.UpdateAnnouncement
     @Id            INT,
     @Title         NVARCHAR(200),
     @Description   NVARCHAR(MAX),
@@ -144,12 +214,26 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
+    IF NOT EXISTS (
+        SELECT 1
+        FROM dbo.SubCategories sc
+        WHERE sc.SubCategoryId = @SubCategoryId
+          AND sc.CategoryId    = @CategoryId
+    )
+    BEGIN
+        THROW 50002, 'SubCategoryId does not belong to CategoryId.', 1;
+    END;
+
     UPDATE dbo.Announcements
-    SET
-        Title         = @Title,
+    SET Title         = @Title,
         Description   = @Description,
         Status        = @Status,
         CategoryId    = @CategoryId,
         SubCategoryId = @SubCategoryId
     WHERE Id = @Id;
-END;
+
+    SELECT @@ROWCOUNT AS RowsAffected;
+END
+GO
+
+-- End of script
