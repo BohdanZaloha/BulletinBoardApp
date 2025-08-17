@@ -95,7 +95,7 @@ namespace BulletinBoardApi.Data
                     Status = reader.GetBoolean(reader.GetOrdinal(nameof(announcement.Status))),
                     CategoryId = reader.GetInt32(reader.GetOrdinal(nameof(announcement.CategoryId))),
                     SubCategoryId = reader.GetInt32(reader.GetOrdinal(nameof(announcement.SubCategoryId))),
-                    CategoryName = reader.GetString(reader.GetOrdinal(nameof(announcement.SubCategoryName))),
+                    CategoryName = reader.GetString(reader.GetOrdinal(nameof(announcement.CategoryName))),
                     SubCategoryName = reader.GetString(reader.GetOrdinal(nameof(announcement.SubCategoryName)))
                 };
 
@@ -135,7 +135,7 @@ namespace BulletinBoardApi.Data
                         Status = reader.GetBoolean(reader.GetOrdinal(nameof(announcement.Status))),
                         CategoryId = reader.GetInt32(reader.GetOrdinal(nameof(announcement.CategoryId))),
                         SubCategoryId = reader.GetInt32(reader.GetOrdinal(nameof(announcement.SubCategoryId))),
-                        CategoryName = reader.GetString(reader.GetOrdinal(nameof(announcement.SubCategoryName))).Trim(),
+                        CategoryName = reader.GetString(reader.GetOrdinal(nameof(announcement.CategoryName))).Trim(),
                         SubCategoryName = reader.GetString(reader.GetOrdinal(nameof(announcement.SubCategoryName))).Trim()
                     });
                 }

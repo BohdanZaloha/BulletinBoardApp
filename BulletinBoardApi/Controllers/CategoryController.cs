@@ -10,7 +10,7 @@ namespace BulletinBoardApi.Controllers
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
-    public class CategoryController(ICategoryRepository _repository) : ControllerBase
+    public class CategoryController(ICategoryRepository _repository, ILogger<CategoryController> _logger) : ControllerBase
     {
         /// <summary>
         /// Retrieves all categories.
@@ -19,6 +19,7 @@ namespace BulletinBoardApi.Controllers
         public async Task<IActionResult> GetAll(CancellationToken ct)
         {
             var categories = await _repository.GetAllCategoriesAsync(ct);
+            _logger.LogInformation("Retrieved {Count} categories", categories.Count());
             return Ok(categories);
         }
     }

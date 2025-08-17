@@ -8,7 +8,7 @@ namespace BulletinBoardApi.Controllers
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
-    public class SubCategoryController(ISubCategoryRepository repository) : ControllerBase
+    public class SubCategoryController(ISubCategoryRepository repository, ILogger<SubCategoryController> _logger) : ControllerBase
     {
         /// <summary>
         /// Retrieves all SubCategories.
@@ -17,6 +17,7 @@ namespace BulletinBoardApi.Controllers
         public async Task<IActionResult> GetAllSubCategories(CancellationToken ct)
         {
             var subCategories = await repository.GetAllSubCategoriesAsync(ct);
+            _logger.LogInformation("Retrieved {Count} subcategories", subCategories.Count());
             return Ok(subCategories);
         }
 
@@ -27,6 +28,7 @@ namespace BulletinBoardApi.Controllers
         public async Task<IActionResult> GetByCategory(int categoryId, CancellationToken ct)
         {
             var subCategories = await repository.GetSubCategoriesByCategoryIdAsync(categoryId, ct);
+            _logger.LogInformation("Retrieved {Count} subcategories by category id {Id}", subCategories.Count(), categoryId);
             return Ok(subCategories);
         }
     }
